@@ -1,1 +1,4 @@
-.env/*
+*.env
+*.log
+*.dat
+*.DS_Store*
