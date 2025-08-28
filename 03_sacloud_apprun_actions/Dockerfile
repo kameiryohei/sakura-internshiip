@@ -7,7 +7,7 @@ COPY go.mod go.sum ./
 RUN apk add --no-cache gcc musl-dev sqlite-dev \
     && go mod download
 
-COPY . .
+COPY . 
 
 RUN CGO_ENABLED=1 GOOS=linux go build -o app
 
