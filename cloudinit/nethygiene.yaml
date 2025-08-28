@@ -10,14 +10,13 @@ users:
     uid: 1000
 ssh_pwauth: true
 ssh-authorized-keys:
-  - ssh-ed25519 
+  - {{ SSH_PUBLIC_KEY }}
 write_files:
-  - path: /etc/cloudinit/nethygiene-vendor.sh
+  - path: /etc/cloudinit/scan_and_post.sh
     owner: root:root
     permissions: '0755'
     content: |
-      #!/usr/bin/bash 
-      touch /etc/cloudinit/status.excuting
+      #!/usr/bin/bash
       cp /etc/issue /etc/issue.default
       echo "" >> /etc/issue
       echo "### INITIAL BOOT ###" >> /etc/issue
@@ -53,7 +52,6 @@ write_files:
       echo "                ++++      ;;;;;+;+;;+                                           " >> /etc/issue
       echo "                              ++;                                               " >> /etc/issue
       echo "" >> /etc/issue
-      reboot
   - path: /etc/cron.d/nethygiene
     owner: root:root
     permissions: '0644'
@@ -115,7 +113,7 @@ write_files:
         exit 1
       fi
 runcmd:
-  - sh /etc/cloudinit/nethygiene-vendor.sh
+  - sh /etc/cloudinit/scan_and_post.sh
   - systemctl restart cron
 reboot:
   - delay: 10
