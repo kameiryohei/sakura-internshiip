@@ -189,24 +189,7 @@ func main() {
             color: #666; 
             margin-top: 4px; 
         }
-        .refresh-btn { 
-            background: linear-gradient(45deg, #1e3c72, #2a5298); 
-            color: white; 
-            border: none; 
-            padding: 12px 24px; 
-            border-radius: 6px; 
-            font-size: 1rem; 
-            cursor: pointer; 
-            transition: all 0.2s ease; 
-            margin-top: 24px; 
-            display: block; 
-            margin-left: auto; 
-            margin-right: auto; 
-        }
-        .refresh-btn:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3); 
-        }
+
         </style></head><body><div class='container'>`)
         
         fmt.Fprintln(w, `<div class='header'>`)
@@ -278,8 +261,7 @@ func main() {
             }
         }
         fmt.Fprintln(w, `</ul></details>`)
-        
-        fmt.Fprintln(w, `<button class='refresh-btn' onclick='window.location.reload()'>🔄 リアルタイム更新</button>`)
+
         fmt.Fprintln(w, `</div></body></html>`)
     })
 
