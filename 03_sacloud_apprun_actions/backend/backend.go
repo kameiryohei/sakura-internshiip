@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -66,6 +68,24 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("=== ヘルスチェック完了 ===\n")
 }
 
+// bearerAuth function: Bearer token認証の検証
+func bearerAuth(expectedToken, authHeader string) bool {
+	if authHeader == "" {
+		return false
+	}
+
+	// "Bearer " プレフィックスをチェック
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return false
+	}
+
+	// Bearer tokenを取得
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+	token = strings.TrimSpace(token)
+
+	return token == expectedToken
+}
+
 // uploadHandler function: handles device data uploads.
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("=== デバイスデータアップロード開始 ===")
@@ -82,12 +102,27 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Authorization header check (commented out for now)
-	// if r.Header.Get("Authorization") != "abcde" {
-	// 	log.Println("エラー: 認証失敗")
-	// 	http.Error(w, "Missing or invalid Authorization header", http.StatusUnauthorized)
-	// 	return
-	// }
+	// Bearer token認証のチェック
+	authHeader := r.Header.Get("Authorization")
+	log.Printf("Authorization Header: %s", authHeader)
+	
+	// 環境変数からトークンを取得
+	expectedToken := os.Getenv("NET_TOKEN")
+	
+	// 環境変数が設定されていない場合のデフォルト値
+	if expectedToken == "" {
+		expectedToken = "default-secret-token"  // デフォルトトークン
+		log.Printf("警告: NET_TOKEN環境変数が設定されていません。デフォルトトークンを使用します")
+	}
+	
+	if !bearerAuth(expectedToken, authHeader) {
+		log.Printf("エラー: Bearer token認証失敗")
+		log.Printf("Expected token: [REDACTED] (length: %d)", len(expectedToken))
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
+	log.Printf("✅ Bearer token認証成功")
 
 	// データベース接続確認
 	if db == nil {
@@ -170,11 +205,11 @@ func parseJSON(w http.ResponseWriter, r *http.Request) JSON {
 	var data JSON
 	
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		log.Printf("JSONパースエラー: %v", err)
+		log.Printf("❌ JSONパースエラー: %v", err)
 		http.Error(w, fmt.Sprintf("Invalid JSON data: %v", err), http.StatusBadRequest)
 		return JSON{}
 	}
 
-	log.Printf("JSONパース成功")
+	log.Printf("✅ JSONパース成功")
 	return data
 }
