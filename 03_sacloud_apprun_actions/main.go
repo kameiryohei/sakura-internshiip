@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	// "github.com/kameiryohei/sakura-internshiip/03_sacloud_apprun_actions/backend"
-
 	"github.com/ippanpeople/sample-go/backend"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+var globalDB *sql.DB
 
 func main() {
     dbPath := os.Getenv("SQLITE_DB_PATH")
@@ -20,13 +20,14 @@ func main() {
     }
     os.MkdirAll("./data", 0755)
 
-    db, err := sql.Open("sqlite3", dbPath)
+    var err error
+    globalDB, err = sql.Open("sqlite3", dbPath)
     if err != nil {
         log.Fatal(err)
     }
-    defer db.Close()
+    defer globalDB.Close()
 
-    _, err = db.Exec(`CREATE TABLE IF NOT EXISTS device (
+    _, err = globalDB.Exec(`CREATE TABLE IF NOT EXISTS device (
         mac_address VARCHAR(50) PRIMARY KEY,
         ip_address VARCHAR(50),
         vendor VARCHAR(50)
@@ -35,6 +36,28 @@ func main() {
         log.Fatal(err)
     }
 
+    seedData := [][]string{
+        {"00:1B:63:84:45:E6", "192.168.1.105", "Apple"},
+        {"00:16:CB:00:11:22", "192.168.1.102", "Apple"},
+        {"00:1F:5B:12:34:56", "192.168.1.110", "Dell"},
+        {"00:22:69:AB:CD:EF", "192.168.1.120", "Samsung"},
+        {"08:00:27:12:34:56", "192.168.1.187", ""}, // vendor空=新規
+        {"00:25:90:88:77:66", "192.168.1.145", ""}, // vendor空=新規
+        {"00:12:34:56:78:90", "192.168.1.156", ""}, // vendor空=新規
+        {"00:00:00:00:00:00", "192.168.1.199", "Unknown"}, // 危険判定用
+    }
+
+    for _, data := range seedData {
+        _, err = globalDB.Exec("INSERT OR IGNORE INTO device (mac_address, ip_address, vendor) VALUES (?, ?, ?)", 
+            data[0], data[1], data[2])
+        if err != nil {
+            log.Printf("Failed to insert seed data: %v", err)
+        }
+    }
+
+    backend.SetDatabase(globalDB)
+
+    // 既存のルートハンドラー（変更なし）
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "text/html; charset=utf-8")
         fmt.Fprintln(w, `<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'><title>ネットワーク機器監視システム</title><style>
@@ -167,36 +190,6 @@ func main() {
             background: #f8d7da; 
             color: #721c24; 
         }
-        .broadcast-monitor { 
-            background: #f8f9fa; 
-            border: 1px solid #e1e8ed; 
-            border-radius: 8px; 
-            padding: 20px; 
-        }
-        .monitor-stats { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 16px; 
-            margin-top: 16px; 
-        }
-        .stat-card { 
-            text-align: center; 
-            padding: 16px; 
-            background: white; 
-            border-radius: 6px; 
-            border: 1px solid #e1e8ed; 
-        }
-        .stat-number { 
-            font-size: 2rem; 
-            font-weight: bold; 
-            color: #1e3c72; 
-        }
-        .stat-label { 
-            font-size: 0.9rem; 
-            color: #666; 
-            margin-top: 4px; 
-        }
-
         </style></head><body><div class='container'>`)
         
         fmt.Fprintln(w, `<div class='header'>`)
@@ -219,50 +212,45 @@ func main() {
         fmt.Fprintln(w, `<h2 class='section-title'>🖥️ 検出機器一覧</h2>`)
         fmt.Fprintln(w, `<div class='devices-grid'>`)
         
-        // サンプル機器データの表示
-        fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>📱 機器 #1</h3><div class='device-details'>IP: 192.168.1.105<br>MAC: 00:1B:63:84:45:E6</div></div>`)
-        fmt.Fprintln(w, `<div class='device-status status-safe'>安全</div>`)
-        fmt.Fprintln(w, `</div>`)
-        
-        fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>💻 機器 #2</h3><div class='device-details'>IP: 192.168.1.102<br>MAC: 00:16:CB:00:11:22</div></div>`)
-        fmt.Fprintln(w, `<div class='device-status status-safe'>安全</div>`)
-        fmt.Fprintln(w, `</div>`)
-        
-        fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>🔍 機器 #3</h3><div class='device-details'>IP: 192.168.1.187<br>MAC: 08:00:27:12:34:56</div></div>`)
-        fmt.Fprintln(w, `<div class='device-status status-warning'>新規</div>`)
-        fmt.Fprintln(w, `</div>`)
-        
-        fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>🔍 機器 #4</h3><div class='device-details'>IP: 192.168.1.145<br>MAC: 00:25:90:88:77:66</div></div>`)
-        fmt.Fprintln(w, `<div class='device-status status-warning'>新規</div>`)
-        fmt.Fprintln(w, `</div>`)
-        
-        fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>🔍 機器 #5</h3><div class='device-details'>IP: 192.168.1.156<br>MAC: 00:12:34:56:78:90</div></div>`)
-        fmt.Fprintln(w, `<div class='device-status status-warning'>新規</div>`)
-        fmt.Fprintln(w, `</div>`)
-        
-        fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>🚨 機器 #6</h3><div class='device-details'>IP: 192.168.1.199<br>MAC: 00:00:00:00:00:00</div></div>`)
-        fmt.Fprintln(w, `<div class='device-status status-danger'>危険</div>`)
-        fmt.Fprintln(w, `</div>`)
-        
-        fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>💻 機器 #7</h3><div class='device-details'>IP: 192.168.1.110<br>MAC: 00:1F:5B:12:34:56</div></div>`)
-        fmt.Fprintln(w, `<div class='device-status status-safe'>安全</div>`)
-        fmt.Fprintln(w, `</div>`)
-        
-        fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>📱 機器 #8</h3><div class='device-details'>IP: 192.168.1.120<br>MAC: 00:22:69:AB:CD:EF</div></div>`)
-        fmt.Fprintln(w, `<div class='device-status status-safe'>安全</div>`)
-        fmt.Fprintln(w, `</div>`)
+        rows, err := globalDB.Query("SELECT mac_address, ip_address, vendor FROM device ORDER BY mac_address")
+        if err != nil {
+            fmt.Fprintf(w, "<div class='device-card'><div class='device-info'><h3>❌ エラー</h3><div class='device-details'>%s</div></div></div>", err.Error())
+        } else {
+            defer rows.Close()
+            deviceCount := 0
+            for rows.Next() {
+                var macAddress, ipAddress, vendor string
+                rows.Scan(&macAddress, &ipAddress, &vendor)
+                deviceCount++
+                
+                // ステータス判定（仮の実装）
+                statusText := "安全"
+                statusClass := "status-safe"
+                
+                // vendorが空の場合は新規として扱う
+                if vendor == "" {
+                    statusText = "新規"
+                    statusClass = "status-warning"
+                }
+                if vendor == "Unknown" {
+                    statusText = "危険"
+                    statusClass = "status-danger"
+                }
+                
+                fmt.Fprintln(w, `<div class='device-card'>`)
+                fmt.Fprintf(w, `<div class='device-info'><h3>🖥️ 機器 #%d</h3><div class='device-details'>IP: %s<br>MAC: %s<br>ベンダー: %s</div></div>`, deviceCount, ipAddress, macAddress, vendor)
+                fmt.Fprintf(w, `<div class='device-status %s'>%s</div>`, statusClass, statusText)
+                fmt.Fprintln(w, `</div>`)
+            }
+            
+            // 機器が見つからない場合
+            if deviceCount == 0 {
+                fmt.Fprintln(w, `<div class='device-card'><div class='device-info'><h3>📭 機器なし</h3><div class='device-details'>検出された機器がありません</div></div><div class='device-status status-safe'>-</div></div>`)
+            }
+        }
         
         fmt.Fprintln(w, `</div>`)
         fmt.Fprintln(w, `</div>`)
-        
         fmt.Fprintln(w, `</div></body></html>`)
     })
 
@@ -278,7 +266,7 @@ func main() {
             http.Error(w, "msg required", 400)
             return
         }
-        _, err := db.Exec("INSERT INTO messages(content) VALUES(?)", msg)
+        _, err := globalDB.Exec("INSERT INTO messages(content) VALUES(?)", msg)
         if err != nil {
             http.Error(w, err.Error(), 500)
             return
@@ -290,7 +278,7 @@ func main() {
     if port == "" {
         port = "8080"
     }
-    fmt.Println("Listening on port", port)
-    backend.RunBackend()
+    fmt.Println("Listening on port", port)    
+    go backend.RunBackend()
     log.Fatal(http.ListenAndServe(":"+port, nil))
 }
