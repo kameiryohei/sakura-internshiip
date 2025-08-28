@@ -1,0 +1,51 @@
+#cloud-config
+hostname: ubuntu
+ssh_pwauth: True
+disable_root: false
+timezone: Asia/Tokyo
+users:
+  - name: admin
+    lock_passwd: false
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    uid: 1000
+ssh-authorized-keys:
+  - ssh-ed25519 xxxxxxxxxxxxxxxxxxxxxxxx~
+write_files:
+  - path: /etc/cloudinit/nethygiene-vendor.sh
+    permissions: '0755'
+    content: |
+      #!/usr/bin/bash
+      if [ -f /etc/cloudinit/status.complete ]; then
+        echo "File exists."
+        exit 0
+      fi
+      touch /etc/cloudinit/status.excuting
+      cp /etc/issue /etc/issue.default
+      echo "" >> /etc/issue
+      echo "### INITIAL BOOT ###" >> /etc/issue
+      echo "Setup in progress, please wait" >> /etc/issue
+      echo "" >> /etc/issue
+      systemctl restart getty@tty1
+      apt update
+      apt upgrade -y
+      apt install -y arp-scan
+      cat /etc/issue.default > /etc/issue
+      echo "NetHygiene/ubuntu v0.1.0" >> /etc/issue
+      echo "" >> /etc/issue
+      echo "*%%      %%              +#     %#      %%*                       %*                                " >> /etc/issue
+      echo "%@@#     @@              @@     @%      #@%                      #@#                                " >> /etc/issue
+      echo "%@@%%    @@    %%#**   #@@@@%*  @@      %@% #%@     %*  ##**#%%   @%    %##**    %%#**##     *%#**  " >> /etc/issue
+      echo "%%  %%   @@  #@@   %@#   @@@    @@%%%%%@@@%  @@    %% #%%   %@@% @@%  %%@   %@# %@@%  %@%  +@@%  @@*" >> /etc/issue
+      echo "%%   %%@ @@  @@@@#*#%#   %@     @@      @@%  @@@  %%  %@     @@% @@%  @@@##*#%# %@%    %@* %@@##*#%*" >> /etc/issue
+      echo "%%    %@@@@  @@          %@     @@      %@%   %@%%@#  %@     %@% @@% %@@        %@%    %@% %@       " >> /etc/issue
+      echo "%%     %@@@  #@@   ##*   %@@    @%      #@%    %@@@    %*+*+#@@% @@%  #%#   *#+ *@%    %@% *%%   ##+" >> /etc/issue
+      echo "**       #%    **+##*    ###*+  %#       %#     @@           @@#  #*    **+##%   %*    *%%   #%#### " >> /etc/issue
+      echo "                                               %@%    *%    %@%                                     " >> /etc/issue
+      echo "                                            =**#*      ###**##                                      " >> /etc/issue
+      echo "" >> /etc/issue
+      rm -rf /etc/cloudinit/status.excuting
+      touch /etc/cloudinit/status.complete
+      reboot
+runcmd:
+  - sh /etc/cloudinit/nethygiene-vendor.sh
