@@ -1,0 +1,49 @@
+name: Sacloud AppRun Actions
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy Go app
+        id: deploy
+        uses: ippanpeople/sacloud-apprun-action@v0.0.4
+        with:
+          use-repository-dockerfile: false
+          app-dir: ./03_sacloud_apprun_actions
+          sakura-api-key: ${{ secrets.SAKURA_API_KEY }}
+          sakura-api-secret: ${{ secrets.SAKURA_API_SECRET }}
+          container-registry: ${{ secrets.REGISTRY }}
+          container-registry-user: ${{ secrets.REGISTRY_USER }}
+          container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+          port: '8080'
+          object-storage-bucket: ${{ secrets.STORAGE_BUCKET_NAME }}
+          object-storage-access-key: ${{ secrets.STORAGE_ACCESS_KEY }}
+          object-storage-secret-key: ${{ secrets.STORAGE_SECRET_KEY }}
+          sqlite-db-path: ./data/app.db
+          litestream-replicate-interval: 10s
+
+      - name: DEPLOY_PUBLIC_URL in GITHUB_ENV
+        run: echo "DEPLOY_PUBLIC_URL=$(echo \"${{ steps.deploy.outputs.public-url }}\" | sed 's/\\//g')" >> $GITHUB_ENV
+        env:
+          PUBLIC_URL: ${{ steps.deploy.outputs.public-url }}
+
+    #   - name: Notify deployment result
+    #     if: env.DEPLOY_PUBLIC_URL != ''
+    #     uses: ippanpeople/slack-notify-action@v0.0.5
+    #     with:
+    #       webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+    #       thread_ts: "1756085798.811349"
+    #       pretext: "03 Sacloud Apprun Actions ✅ <!channel>"
+    #       author_name: ":github_white: ${{ vars.AUTHOR_NAME }}"
+    #       repository: "${{ vars.REPOSITORY }}"
+    #       message: ":deploy: ${{ env.DEPLOY_PUBLIC_URL }}"
