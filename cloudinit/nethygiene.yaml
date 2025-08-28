@@ -4,16 +4,18 @@ disable_root: false
 timezone: Asia/Tokyo
 users:
   - name: admin
-    lock_passwd: false
-    password: "apprun"
+    lock_passwd: true
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
     uid: 1000
+ssh_pwauth: true
+ssh-authorized-keys:
+  - ssh-ed25519 $PUBLIC_KEY
 write_files:
   - path: /etc/cloudinit/nethygiene-vendor.sh
     permissions: '0755'
     content: |
-      #!/usr/bin/bash
+      #!/usr/bin/bash 
       touch /etc/cloudinit/status.excuting
       cp /etc/issue /etc/issue.default
       echo "" >> /etc/issue
