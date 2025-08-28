@@ -199,13 +199,13 @@ func main() {
         
         fmt.Fprintln(w, `<div class='status-bar'>`)
         fmt.Fprintln(w, `<div class='status-item'><span class='status-label'>監視状態</span><span class='status-value'>🟢 アクティブ</span></div>`)
-        fmt.Fprintln(w, `<div class='status-item'><span class='status-label'>検出機器数</span><span class='status-value'>12台</span></div>`)
+        fmt.Fprintln(w, `<div class='status-item'><span class='status-label'>検出機器数</span><span class='status-value'>8台</span></div>`)
         fmt.Fprintln(w, `<div class='status-item'><span class='status-label'>最終更新</span><span class='status-value'>2分前</span></div>`)
         fmt.Fprintln(w, `</div>`)
         
         fmt.Fprintln(w, `<div class='alert-banner'>`)
         fmt.Fprintln(w, `<span class='alert-icon'>⚠️</span>`)
-        fmt.Fprintln(w, `<span>不明な機器が2台検出されました。詳細確認が必要です。</span>`)
+        fmt.Fprintln(w, `<span>新規機器が3台検出されました。詳細確認が必要です。</span>`)
         fmt.Fprintln(w, `</div>`)
         
         fmt.Fprintln(w, `<div class='devices-section'>`)
@@ -214,54 +214,48 @@ func main() {
         
         // サンプル機器データの表示
         fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>📱 iPhone 14 Pro</h3><div class='device-details'>IP: 192.168.1.105<br>MAC: 00:1B:63:84:45:E6<br>メーカー: Apple Inc.</div></div>`)
+        fmt.Fprintln(w, `<div class='device-info'><h3>📱 機器 #1</h3><div class='device-details'>IP: 192.168.1.105<br>MAC: 00:1B:63:84:45:E6</div></div>`)
         fmt.Fprintln(w, `<div class='device-status status-safe'>安全</div>`)
         fmt.Fprintln(w, `</div>`)
         
         fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>💻 MacBook Pro</h3><div class='device-details'>IP: 192.168.1.102<br>MAC: 00:16:CB:00:11:22<br>メーカー: Apple Inc.</div></div>`)
+        fmt.Fprintln(w, `<div class='device-info'><h3>💻 機器 #2</h3><div class='device-details'>IP: 192.168.1.102<br>MAC: 00:16:CB:00:11:22</div></div>`)
         fmt.Fprintln(w, `<div class='device-status status-safe'>安全</div>`)
         fmt.Fprintln(w, `</div>`)
         
         fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>❓ 不明な機器</h3><div class='device-details'>IP: 192.168.1.187<br>MAC: 08:00:27:12:34:56<br>メーカー: 不明</div></div>`)
-        fmt.Fprintln(w, `<div class='device-status status-warning'>要注意</div>`)
+        fmt.Fprintln(w, `<div class='device-info'><h3>🔍 機器 #3</h3><div class='device-details'>IP: 192.168.1.187<br>MAC: 08:00:27:12:34:56</div></div>`)
+        fmt.Fprintln(w, `<div class='device-status status-warning'>新規</div>`)
         fmt.Fprintln(w, `</div>`)
         
         fmt.Fprintln(w, `<div class='device-card'>`)
-        fmt.Fprintln(w, `<div class='device-info'><h3>🚨 疑わしい機器</h3><div class='device-details'>IP: 192.168.1.199<br>MAC: 00:00:00:00:00:00<br>メーカー: 不明 (偽装の疑い)</div></div>`)
+        fmt.Fprintln(w, `<div class='device-info'><h3>🔍 機器 #4</h3><div class='device-details'>IP: 192.168.1.145<br>MAC: 00:25:90:88:77:66</div></div>`)
+        fmt.Fprintln(w, `<div class='device-status status-warning'>新規</div>`)
+        fmt.Fprintln(w, `</div>`)
+        
+        fmt.Fprintln(w, `<div class='device-card'>`)
+        fmt.Fprintln(w, `<div class='device-info'><h3>🔍 機器 #5</h3><div class='device-details'>IP: 192.168.1.156<br>MAC: 00:12:34:56:78:90</div></div>`)
+        fmt.Fprintln(w, `<div class='device-status status-warning'>新規</div>`)
+        fmt.Fprintln(w, `</div>`)
+        
+        fmt.Fprintln(w, `<div class='device-card'>`)
+        fmt.Fprintln(w, `<div class='device-info'><h3>🚨 機器 #6</h3><div class='device-details'>IP: 192.168.1.199<br>MAC: 00:00:00:00:00:00</div></div>`)
         fmt.Fprintln(w, `<div class='device-status status-danger'>危険</div>`)
         fmt.Fprintln(w, `</div>`)
         
+        fmt.Fprintln(w, `<div class='device-card'>`)
+        fmt.Fprintln(w, `<div class='device-info'><h3>💻 機器 #7</h3><div class='device-details'>IP: 192.168.1.110<br>MAC: 00:1F:5B:12:34:56</div></div>`)
+        fmt.Fprintln(w, `<div class='device-status status-safe'>安全</div>`)
+        fmt.Fprintln(w, `</div>`)
+        
+        fmt.Fprintln(w, `<div class='device-card'>`)
+        fmt.Fprintln(w, `<div class='device-info'><h3>📱 機器 #8</h3><div class='device-details'>IP: 192.168.1.120<br>MAC: 00:22:69:AB:CD:EF</div></div>`)
+        fmt.Fprintln(w, `<div class='device-status status-safe'>安全</div>`)
+        fmt.Fprintln(w, `</div>`)
+        
         fmt.Fprintln(w, `</div>`)
         fmt.Fprintln(w, `</div>`)
         
-        fmt.Fprintln(w, `<div class='broadcast-monitor'>`)
-        fmt.Fprintln(w, `<h2 class='section-title'>📡 ブロードキャスト/マルチキャスト監視</h2>`)
-        fmt.Fprintln(w, `<div class='monitor-stats'>`)
-        fmt.Fprintln(w, `<div class='stat-card'><div class='stat-number'>342</div><div class='stat-label'>ブロードキャスト/分</div></div>`)
-        fmt.Fprintln(w, `<div class='stat-card'><div class='stat-number'>89</div><div class='stat-label'>マルチキャスト/分</div></div>`)
-        fmt.Fprintln(w, `<div class='stat-card'><div class='stat-number'>🟡</div><div class='stat-label'>警告レベル</div></div>`)
-        fmt.Fprintln(w, `<div class='stat-card'><div class='stat-number'>15:32</div><div class='stat-label'>最後の異常検出</div></div>`)
-        fmt.Fprintln(w, `</div>`)
-        fmt.Fprintln(w, `</div>`)
-        
-        // 既存のメッセージ一覧は隠すか、ログとして表示
-        fmt.Fprintln(w, `<details style='margin-top: 32px;'><summary style='cursor: pointer; font-weight: bold; color: #666;'>📋 システムログ</summary><ul style='margin-top: 16px; max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 16px; border-radius: 6px;'>`)
-        rows, err := db.Query("SELECT id, content FROM messages ORDER BY id DESC LIMIT 10")
-        if err != nil {
-            fmt.Fprintf(w, "<li style='color:red;'>%s</li>", err.Error())
-        } else {
-            defer rows.Close()
-            for rows.Next() {
-                var id int
-                var content string
-                rows.Scan(&id, &content)
-                fmt.Fprintf(w, "<li style='padding: 4px 0; border-bottom: 1px solid #e1e8ed; font-size: 0.9rem;'><b>#%d</b>: %s</li>", id, content)
-            }
-        }
-        fmt.Fprintln(w, `</ul></details>`)
-
         fmt.Fprintln(w, `</div></body></html>`)
     })
 
