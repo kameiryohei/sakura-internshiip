@@ -23,7 +23,11 @@ func main() {
     }
     defer db.Close()
 
-    _, err = db.Exec(`CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, content TEXT)`)
+    _, err = db.Exec(`CREATE TABLE IF NOT EXISTS device (
+        mac_address VARCHAR(50) PRIMARY KEY,
+        ip_address VARCHAR(50),
+        vendor VARCHAR(50)
+    )`)
     if err != nil {
         log.Fatal(err)
     }
