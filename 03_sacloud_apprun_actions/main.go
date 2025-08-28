@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"os"
 
+	// "github.com/kameiryohei/sakura-internshiip/03_sacloud_apprun_actions/backend"
+
+	"github.com/ippanpeople/sample-go/backend"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -84,5 +87,6 @@ func main() {
         port = "8080"
     }
     fmt.Println("Listening on port", port)
+    backend.RunBackend()
     log.Fatal(http.ListenAndServe(":"+port, nil))
 }
