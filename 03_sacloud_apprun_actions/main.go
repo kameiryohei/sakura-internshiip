@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	// "github.com/kameiryohei/sakura-internshiip/03_sacloud_apprun_actions/backend"
-
 	"github.com/ippanpeople/sample-go/backend"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+var globalDB *sql.DB
 
 func main() {
     dbPath := os.Getenv("SQLITE_DB_PATH")
@@ -20,13 +20,14 @@ func main() {
     }
     os.MkdirAll("./data", 0755)
 
-    db, err := sql.Open("sqlite3", dbPath)
+    var err error
+    globalDB, err = sql.Open("sqlite3", dbPath)
     if err != nil {
         log.Fatal(err)
     }
-    defer db.Close()
+    defer globalDB.Close()
 
-    _, err = db.Exec(`CREATE TABLE IF NOT EXISTS device (
+    _, err = globalDB.Exec(`CREATE TABLE IF NOT EXISTS device (
         mac_address VARCHAR(50) PRIMARY KEY,
         ip_address VARCHAR(50),
         vendor VARCHAR(50)
@@ -47,14 +48,17 @@ func main() {
     }
 
     for _, data := range seedData {
-        _, err = db.Exec("INSERT OR IGNORE INTO device (mac_address, ip_address, vendor) VALUES (?, ?, ?)", 
+        _, err = globalDB.Exec("INSERT OR IGNORE INTO device (mac_address, ip_address, vendor) VALUES (?, ?, ?)", 
             data[0], data[1], data[2])
         if err != nil {
             log.Printf("Failed to insert seed data: %v", err)
         }
     }
 
-  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    backend.SetDatabase(globalDB)
+
+    // 既存のルートハンドラー（変更なし）
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "text/html; charset=utf-8")
         fmt.Fprintln(w, `<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'><title>ネットワーク機器監視システム</title><style>
         body { 
@@ -186,36 +190,6 @@ func main() {
             background: #f8d7da; 
             color: #721c24; 
         }
-        .broadcast-monitor { 
-            background: #f8f9fa; 
-            border: 1px solid #e1e8ed; 
-            border-radius: 8px; 
-            padding: 20px; 
-        }
-        .monitor-stats { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 16px; 
-            margin-top: 16px; 
-        }
-        .stat-card { 
-            text-align: center; 
-            padding: 16px; 
-            background: white; 
-            border-radius: 6px; 
-            border: 1px solid #e1e8ed; 
-        }
-        .stat-number { 
-            font-size: 2rem; 
-            font-weight: bold; 
-            color: #1e3c72; 
-        }
-        .stat-label { 
-            font-size: 0.9rem; 
-            color: #666; 
-            margin-top: 4px; 
-        }
-
         </style></head><body><div class='container'>`)
         
         fmt.Fprintln(w, `<div class='header'>`)
@@ -238,8 +212,7 @@ func main() {
         fmt.Fprintln(w, `<h2 class='section-title'>🖥️ 検出機器一覧</h2>`)
         fmt.Fprintln(w, `<div class='devices-grid'>`)
         
-        // DBから機器データを取得して表示
-        rows, err := db.Query("SELECT mac_address, ip_address, vendor FROM device ORDER BY mac_address")
+        rows, err := globalDB.Query("SELECT mac_address, ip_address, vendor FROM device ORDER BY mac_address")
         if err != nil {
             fmt.Fprintf(w, "<div class='device-card'><div class='device-info'><h3>❌ エラー</h3><div class='device-details'>%s</div></div></div>", err.Error())
         } else {
@@ -278,9 +251,6 @@ func main() {
         
         fmt.Fprintln(w, `</div>`)
         fmt.Fprintln(w, `</div>`)
-        
-        // 既存のメッセージ一覧は削除
-
         fmt.Fprintln(w, `</div></body></html>`)
     })
 
@@ -296,7 +266,7 @@ func main() {
             http.Error(w, "msg required", 400)
             return
         }
-        _, err := db.Exec("INSERT INTO messages(content) VALUES(?)", msg)
+        _, err := globalDB.Exec("INSERT INTO messages(content) VALUES(?)", msg)
         if err != nil {
             http.Error(w, err.Error(), 500)
             return
@@ -308,7 +278,7 @@ func main() {
     if port == "" {
         port = "8080"
     }
-    fmt.Println("Listening on port", port)
-    backend.RunBackend()
+    fmt.Println("Listening on port", port)    
+    go backend.RunBackend()
     log.Fatal(http.ListenAndServe(":"+port, nil))
 }
