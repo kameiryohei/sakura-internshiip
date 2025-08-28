@@ -5,7 +5,7 @@ timezone: Asia/Tokyo
 users:
   - name: admin
     lock_passwd: false
-    password: "$6$apprun$kXJj7RduFd0S4eY/TzQ6y4E6L.428gYvtg5Euj1Z9jvU7ikgF5SHQbwKjG0KZFKJK2Ta4MT426.lCEwgqWkML."
+    password: "apprun"
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
     uid: 1000
@@ -23,17 +23,17 @@ write_files:
       systemctl restart getty@tty1
       apt update
       apt upgrade -y
-      apt install -y arp-scan
+      apt install -y arp-scan sl
       cat /etc/issue.default > /etc/issue
       echo "NetHygiene/ubuntu v0.1.0" >> /etc/issue
       echo "" >> /etc/issue
-      echo "#%     ##           *    #      #                  @@                         " >> /etc/issue
-      echo "#%%    @#          #@    #      #                                             " >> /etc/issue
-      echo "#@%%%  @#  ##%%%% #@@#*  #______#  #*   ## ###%%%% #%  ##%%%%  #v##%%   ##%%%%" >> /etc/issue
-      echo "#@  %% @# #%%###%  @@    #======#  %%  ## #@    #% @@ #%%###%  #@   #% #%%###%" >> /etc/issue
-      echo "#@   %%%# %@       @%    #      #   %%##  %@   #@@ @@ %@       #@   ## %@     " >> /etc/issue
-      echo "##    %%#  %####*  %%##  #      #    %@#   %%@#%@@ %#  %####*  ##   ##  %####*" >> /etc/issue
-      echo "                                      ##        ###                           " >> /etc/issue
+      echo "#@%    #%           *    #      #                  @@                         " >> /etc/issue
+      echo "@@%%   @@          #@    #      #                                             " >> /etc/issue
+      echo "@@ %%  @@  ###%%% #@@#*  #______#  #*   ## ###%%%  #%  ###%%%  %%##%%   ###%%%" >> /etc/issue
+      echo "@@  %% @@ ##%%###  @@    #======#  %%  ## ##    %% @@ ##%%###  @@   %% ##%%###" >> /etc/issue
+      echo "@@   %%@@ %%       @%    #      #   %%##  %%   ##@ @@ %%       @@   @@ %%     " >> /etc/issue
+      echo "%#    %@#  %%###*  %%##  #      #    %@#   %%@##%@ %#  %%###*  %#   %#  %%###*" >> /etc/issue
+      echo "                                      ##        ##                            " >> /etc/issue
       echo "                                    *##     *####                             " >> /etc/issue
       echo "" >> /etc/issue
       reboot
@@ -49,3 +49,4 @@ reboot:
   - delay: 10
   - timeout: 600
   - condition: "true"
+
