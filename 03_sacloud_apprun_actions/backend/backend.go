@@ -1,12 +1,12 @@
 package backend
 
-
 import (
 	"encoding/json"
 	"log"
+	"fmt"
 	"net/http"
+	"os"
 )
-
 
 // JSON type: represents the structure of the incoming JSON data.
 type JSON struct {
@@ -26,14 +26,19 @@ type JSON struct {
 
 // RunBackend function: starts the HTTP server.
 func RunBackend() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	// Register the handler function for the "/upload" endpoint.
 	http.HandleFunc("/upload", uploadHandler)
 
-	// Start the server on port 8000.
-	log.Println("Server listening on port 8000...")
+	// Start the server on the specified port.
+	log.Printf("Server listening on port %s...", port)
 
 	// Handle any errors that occur while starting the server.
-	err := http.ListenAndServe(":8000", nil)
+	err := http.ListenAndServe(":"+port, nil)
 	log.Fatal(err)
 }
 
@@ -49,22 +54,22 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for the Authorization header.
-	if r.Header.Get("Authorization") != "abcde" {
-		http.Error(w, "Missing or invalid Authorization header", http.StatusUnauthorized)
-		log.Println("Unauthorized access attempt")
+	// if r.Header.Get("Authorization") != "abcde" {
+	// 	http.Error(w, "Missing or invalid Authorization header", http.StatusUnauthorized)
+	// 	log.Println("Unauthorized access attempt")
 
-		return
-	}
+	// 	return
+	// }
 
 	// Call the parseJSON function to handle the request.
 	JSON_data := parseJSON(w, r)
 
 	i := 0
 	for k, v := range JSON_data.Devices {
-		log.Printf("Device %d (key: %s):\n", i, k)
-		log.Printf("  MAC: %s\n", v.MAC.Key)
-		log.Printf("  IP: %s\n", v.IP.Key)
-		log.Printf("  Vendor: %s\n", v.Vendor.Key)
+		fmt.Printf("Device %d (key: %s):\n", i, k)
+		fmt.Printf("  MAC: %s\n", v.MAC.Key)
+		fmt.Printf("  IP: %s\n", v.IP.Key)
+		fmt.Printf("  Vendor: %s\n", v.Vendor.Key)
 		i++
 	}
 }
