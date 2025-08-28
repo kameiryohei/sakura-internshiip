@@ -10,7 +10,7 @@ users:
     uid: 1000
 ssh_pwauth: true
 ssh-authorized-keys:
-  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDwPTNz9M8GdFrRFr1C185rHnIJNl+YTbRjRZgqnLEFz
+  - ssh-ed25519 
 write_files:
   - path: /etc/cloudinit/nethygiene-vendor.sh
     owner: root:root
@@ -30,14 +30,28 @@ write_files:
       cat /etc/issue.default > /etc/issue
       echo "NetHygiene/ubuntu v0.1.0" >> /etc/issue
       echo "" >> /etc/issue
-      echo "#@%    #%           *    #      #                  @@                         " >> /etc/issue
-      echo "@@%%   @@          #@    #      #                                             " >> /etc/issue
-      echo "@@ %%  @@  ###%%% #@@#*  #______#  #*   ## ###%%%  #%  ###%%%  %%##%%   ###%%%" >> /etc/issue
-      echo "@@  %% @@ ##%%###  @@    #======#  %%  ## ##    %% @@ ##%%###  @@   %% ##%%###" >> /etc/issue
-      echo "@@   %%@@ %%       @%    #      #   %%##  %%   ##@ @@ %%       @@   @@ %%     " >> /etc/issue
-      echo "%#    %@#  %%###*  %%%*  #      #    %@#   %%@##%@ %#  %%###*  %#   %#  %%###*" >> /etc/issue
-      echo "                                      ##        ##                            " >> /etc/issue
-      echo "                                    *##     *####                             " >> /etc/issue
+      echo "       &&&&      &&&&                                                           " >> /etc/issue
+      echo "       &&&&&     &&&&            &&                                             " >> /etc/issue
+      echo "       &&&&&&    &&&&           &&&                                             " >> /etc/issue
+      echo "       &&& &&&   &&&&        &&&&&&&&&&&&                                       " >> /etc/issue
+      echo "       &&& &&&&  &&&&  &&&&&&&& &&&                                             " >> /etc/issue
+      echo "       &&&  &&&& &&&&&&&&   &&&&&&&                                             " >> /etc/issue
+      echo "       &&&   &&&&&&&&&&       &&&&&                                             " >> /etc/issue
+      echo "       &&&    &&&&&&&&&&&&&&&&&&&&&  &&&&&                                      " >> /etc/issue
+      echo " ;;;;; &&&+;;;;x&&&&&&&          &&& &&&&&                                      " >> /etc/issue
+      echo " ;+;+; &&&+;+;++&&&&&&&&&&   &&&  &&&&&&&&                                      " >> /etc/issue
+      echo " ;;+;;    +;;+;+       &&&&&&&&    ;;;;;;;     +;;;;++                          " >> /etc/issue
+      echo " +;;+;    +;+;;+;;;+   +;;;+       ;+;++;+   ;;+;++;;;;;                        " >> /etc/issue
+      echo " ;+;;+;;;;+;;+;+;+;+   ;+;; +;;;;;+;;+;;++  ;+;;    +;+;            +;;;;;;;+   " >> /etc/issue
+      echo " ;;+;;+;+;;+;;+++;;;+  ;;++;;+;;++;+;;+;;+  ;;+;;;;;+;;+&&&&&&&&&  ;;++;++;;;;  " >> /etc/issue
+      echo " +;;+;    +;+;;+ +;;++;+;+;+;;    ;;+;;+;+  +;;++;+;++;+&&&&&&&&&&++;;;    +;++ " >> /etc/issue
+      echo " ;+;;+    +;;+;+  ;+;;;+; ;;+;    +;;+ ;;;++;+;;++;;+;; &&&&  &&&&x;+;+;;;;+;;+ " >> /etc/issue
+      echo " ;;+;;    +;+;;+   ;+;+;+ +;;++   ;+;; ;+;;+;;+;;;+;;+; &&&&   &&&$;;+;         " >> /etc/issue
+      echo " +;;+;    +;;+;+    ;;+;   +;;;;;+;;+;            +;    &&&&   &&&&+;;+;;+;;++  " >> /etc/issue
+      echo " +;;;;    +;;;;+  ;;+;;       +;+;+;;+                  &&&&   &&&& ;;+;;+;;;;  " >> /etc/issue
+      echo "               ;;;+;;+     ++    ;;+;;                  &&&&   &&&&             " >> /etc/issue
+      echo "                ++++      ;;;;;+;+;;+                                           " >> /etc/issue
+      echo "                              ++;                                               " >> /etc/issue
       echo "" >> /etc/issue
       reboot
   - path: /etc/cron.d/nethygiene
