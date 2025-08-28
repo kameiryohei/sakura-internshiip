@@ -1,25 +1,19 @@
 #cloud-config
 hostname: ubuntu
-ssh_pwauth: True
 disable_root: false
 timezone: Asia/Tokyo
 users:
   - name: admin
     lock_passwd: false
+    password: "$6$apprun$kXJj7RduFd0S4eY/TzQ6y4E6L.428gYvtg5Euj1Z9jvU7ikgF5SHQbwKjG0KZFKJK2Ta4MT426.lCEwgqWkML."
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
     uid: 1000
-ssh-authorized-keys:
-  - ssh-ed25519 xxxxxxxxxxxxxxxxxxxxxxxx~
 write_files:
   - path: /etc/cloudinit/nethygiene-vendor.sh
     permissions: '0755'
     content: |
       #!/usr/bin/bash
-      if [ -f /etc/cloudinit/status.complete ]; then
-        echo "File exists."
-        exit 0
-      fi
       touch /etc/cloudinit/status.excuting
       cp /etc/issue /etc/issue.default
       echo "" >> /etc/issue
@@ -44,8 +38,16 @@ write_files:
       echo "                                               %@%    *%    %@%                                     " >> /etc/issue
       echo "                                            =**#*      ###**##                                      " >> /etc/issue
       echo "" >> /etc/issue
-      rm -rf /etc/cloudinit/status.excuting
-      touch /etc/cloudinit/status.complete
       reboot
+  - path: /etc/cron.d/nethygiene
+    owner: root:root
+    permissions: '0644'
+    content: |
+      */10 * * * * ubuntu /home/ubuntu/NetHygiene/scan_and_post.sh >> /var/log/scan_and_post.log 2>&1
 runcmd:
   - sh /etc/cloudinit/nethygiene-vendor.sh
+  - systemctl restart cron
+reboot:
+  - delay: 10
+  - timeout: 600
+  - condition: "true"
