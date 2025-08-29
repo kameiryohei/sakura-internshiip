@@ -4,19 +4,16 @@ disable_root: false
 timezone: Asia/Tokyo
 users:
   - name: admin
-    lock_passwd: true
-    password: password
+    lock_passwd: false
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
     uid: 1000
-ssh_pwauth: true
+ssh_pwauth: false
 ssh-authorized-keys:
   - {{ SSH_PUBLIC_KEY }}
 package_update: true
 packages:
-  - jq
   - arp-scan
-  - sl
 write_files:
   - path: /etc/cloudinit/nethygiene-vendor.sh
     owner: root:root
@@ -118,7 +115,3 @@ write_files:
 runcmd:
   - sh /etc/cloudinit/nethygiene-vendor.sh
   - sh /home/admin/NetHygiene/scan_and_post.sh
-  - [localectl, set-keymap, jp]
-  - [localectl, set-x11-keymap, jp]
-  - systemctl restart cron
-  - reboot
