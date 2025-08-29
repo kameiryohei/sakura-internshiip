@@ -1,0 +1,72 @@
+name: Deploy Sakura Cloud Instance
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set environment variables
+        run: |
+          echo "IMAGE_ID=112900898555" >> $GITHUB_ENV
+          echo "CORE=2" >> $GITHUB_ENV
+          echo "MEMORY=4" >> $GITHUB_ENV
+          echo "DISK_SIZE=20" >> $GITHUB_ENV
+          echo "ZONE=is1a" >> $GITHUB_ENV
+          echo "SWITCH_ID=YOUR_SWITCH_ID" >> $GITHUB_ENV
+          echo "CLOUD_CONFIG_PATH=cloudinit/nethygiene.yaml" >> $GITHUB_ENV
+
+      - name: Generate user data (cloud-config)
+        id: generate-user-data
+        run: |
+          export CLOUD_CONFIG=$(cat {{ env.CLOUD_CONFIG_PATH }} | sed "s|{{ SSH_PUBLIC_KEY }}|${{ secrets.SSH_PUBLIC_KEY }}|g" | base64 -w 0)
+          echo "CLOUD_CONFIG=$CLOUD_CONFIG" >> $GITHUB_ENV
+
+      - name: Create Sakura Cloud Instance
+        env:
+          SAKURA_CLOUD_ACCESS_TOKEN: ${{ secrets.SAKURA_CLOUD_ACCESS_TOKEN }}
+          SAKURA_CLOUD_ACCESS_SECRET: ${{ secrets.SAKURA_CLOUD_ACCESS_SECRET }}
+        run: |
+          # APIリクエストのペイロードを生成
+          PAYLOAD='{
+            "Server": {
+              "Name": "github-actions-server",
+              "Plan": {
+                "CPU": ${{ env.CORE }},
+                "MemoryMB": ${{ env.MEMORY }}024
+              },
+              "Disks": [
+                {
+                  "SourceArchive": {
+                    "ID": "${{ env.IMAGE_ID }}"
+                  }
+                }
+              ],
+              "Interfaces": [
+                {
+                  "Upstream": {
+                    "ID": "${{ env.SWITCH_ID }}"
+                  }
+                }
+              ],
+              "Userdata": {
+                "cloud-config": {
+                  "cloud_config": "'"$CLOUD_CONFIG"'"
+                }
+              }
+            }
+          }'
+
+          curl -sS -X POST \
+            -H "Authorization: Bearer $SAKURA_CLOUD_ACCESS_TOKEN:$SAKURA_CLOUD_ACCESS_SECRET" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            "https://api.sakura.ad.jp/cloud/zone/${{ env.ZONE }}/server"
