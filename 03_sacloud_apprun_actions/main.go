@@ -30,37 +30,25 @@ func main() {
     _, err = globalDB.Exec(`CREATE TABLE IF NOT EXISTS device (
         mac_address VARCHAR(50) PRIMARY KEY,
         ip_address VARCHAR(50),
-        vendor VARCHAR(50)
+        vendor VARCHAR(50),
+        is_dangerous BOOLEAN DEFAULT FALSE
     )`)
     if err != nil {
         log.Fatal(err)
     }
 
-    seedData := [][]string{
-        {"00:1B:63:84:45:E6", "192.168.1.105", "Apple"},
-        {"00:16:CB:00:11:22", "192.168.1.102", "Apple"},
-        {"00:1F:5B:12:34:56", "192.168.1.110", "Dell"},
-        {"00:22:69:AB:CD:EF", "192.168.1.120", "Samsung"},
-        {"08:00:27:12:34:56", "192.168.1.187", ""}, // vendor空=新規
-        {"00:25:90:88:77:66", "192.168.1.145", ""}, // vendor空=新規
-        {"00:12:34:56:78:90", "192.168.1.156", ""}, // vendor空=新規
-        {"00:00:00:00:00:00", "192.168.1.199", "Unknown"}, // 危険判定用
-    }
-
-    for _, data := range seedData {
-        _, err = globalDB.Exec("INSERT OR IGNORE INTO device (mac_address, ip_address, vendor) VALUES (?, ?, ?)", 
-            data[0], data[1], data[2])
-        if err != nil {
-            log.Printf("Failed to insert seed data: %v", err)
-        }
+    // 既存テーブルにis_dangerousカラムが存在しない場合は追加
+    _, err = globalDB.Exec(`ALTER TABLE device ADD COLUMN is_dangerous BOOLEAN DEFAULT FALSE`)
+    if err != nil {
+        // カラムが既に存在する場合はエラーを無視
+        log.Printf("Column is_dangerous might already exist: %v", err)
     }
 
     backend.SetDatabase(globalDB)
 
-    // 既存のルートハンドラー（変更なし）
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "text/html; charset=utf-8")
-        fmt.Fprintln(w, `<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'><title>ネットワーク機器監視システム</title><style>
+        fmt.Fprintln(w, `<!DOCTYPE html><html lang='ja'><head><meta charset='utf-8'><title>NetHygiene</title><style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             background: linear-gradient(135deg, #1e3c72, #2a5298); 
@@ -128,6 +116,11 @@ func main() {
             align-items: center; 
             gap: 8px; 
         }
+        .alert-banner.danger { 
+            background: #f8d7da; 
+            border: 1px solid #f5c6cb; 
+            color: #721c24; 
+        }
         .alert-icon { 
             font-size: 1.2rem; 
         }
@@ -182,37 +175,78 @@ func main() {
             background: #d4edda; 
             color: #155724; 
         }
-        .status-warning { 
-            background: #fff3cd; 
-            color: #856404; 
-        }
         .status-danger { 
             background: #f8d7da; 
             color: #721c24; 
         }
-        </style></head><body><div class='container'>`)
+        </style>
+        <script>
+        // 60秒ごとにページを自動更新（機器からの送信が1分間隔のため）
+        setTimeout(function() {
+            location.reload();
+        }, 60000);
+        
+        // リアルタイム更新表示用
+        let lastUpdate = new Date();
+        function updateTimestamp() {
+            const now = new Date();
+            const diffSeconds = Math.floor((now - lastUpdate) / 1000);
+            const timestampEl = document.getElementById('last-update');
+            if (timestampEl) {
+                if (diffSeconds < 60) {
+                    timestampEl.textContent = diffSeconds + '秒前';
+                } else {
+                    const diffMinutes = Math.floor(diffSeconds / 60);
+                    timestampEl.textContent = diffMinutes + '分前';
+                }
+            }
+        }
+        
+        // 1秒ごとにタイムスタンプを更新
+        setInterval(updateTimestamp, 1000);
+        
+        // ページロード時にタイムスタンプを初期化
+        window.onload = function() {
+            updateTimestamp();
+        }
+        </script>
+        </head><body><div class='container'>`)
         
         fmt.Fprintln(w, `<div class='header'>`)
-        fmt.Fprintln(w, `<h1>🛡️ ネットワーク機器監視システム</h1>`)
+        fmt.Fprintln(w, `<h1>🛡️ NetHygiene</h1>`)
         fmt.Fprintln(w, `<div class='subtitle'>リアルタイム機器検出・脅威分析ダッシュボード</div>`)
         fmt.Fprintln(w, `</div>`)
         
+        // デバイス統計の取得
+        var totalDevices, dangerousDevices int
+        globalDB.QueryRow("SELECT COUNT(*) FROM device").Scan(&totalDevices)
+        globalDB.QueryRow("SELECT COUNT(*) FROM device WHERE is_dangerous = TRUE").Scan(&dangerousDevices)
+        
         fmt.Fprintln(w, `<div class='status-bar'>`)
         fmt.Fprintln(w, `<div class='status-item'><span class='status-label'>監視状態</span><span class='status-value'>🟢 アクティブ</span></div>`)
-        fmt.Fprintln(w, `<div class='status-item'><span class='status-label'>検出機器数</span><span class='status-value'>8台</span></div>`)
-        fmt.Fprintln(w, `<div class='status-item'><span class='status-label'>最終更新</span><span class='status-value'>2分前</span></div>`)
+        fmt.Fprintf(w, `<div class='status-item'><span class='status-label'>検出機器数</span><span class='status-value'>%d台</span></div>`, totalDevices)
+        fmt.Fprintf(w, `<div class='status-item'><span class='status-label'>危険機器数</span><span class='status-value'>%d台</span></div>`, dangerousDevices)
+        fmt.Fprintf(w, `<div class='status-item'><span class='status-label'>最終更新</span><span class='status-value' id='last-update'>更新中...</span></div>`)
         fmt.Fprintln(w, `</div>`)
         
-        fmt.Fprintln(w, `<div class='alert-banner'>`)
-        fmt.Fprintln(w, `<span class='alert-icon'>⚠️</span>`)
-        fmt.Fprintln(w, `<span>新規機器が3台検出されました。詳細確認が必要です。</span>`)
-        fmt.Fprintln(w, `</div>`)
+        // アラートバナーの表示
+        if dangerousDevices > 0 {
+            fmt.Fprintln(w, `<div class='alert-banner danger'>`)
+            fmt.Fprintln(w, `<span class='alert-icon'>🚨</span>`)
+            fmt.Fprintf(w, `<span>危険機器が%d台検出されました。至急対応が必要です。</span>`, dangerousDevices)
+            fmt.Fprintln(w, `</div>`)
+        } else {
+            fmt.Fprintln(w, `<div class='alert-banner'>`)
+            fmt.Fprintln(w, `<span class='alert-icon'>✅</span>`)
+            fmt.Fprintln(w, `<span>すべての機器は安全です。</span>`)
+            fmt.Fprintln(w, `</div>`)
+        }
         
         fmt.Fprintln(w, `<div class='devices-section'>`)
         fmt.Fprintln(w, `<h2 class='section-title'>🖥️ 検出機器一覧</h2>`)
         fmt.Fprintln(w, `<div class='devices-grid'>`)
         
-        rows, err := globalDB.Query("SELECT mac_address, ip_address, vendor FROM device ORDER BY mac_address")
+        rows, err := globalDB.Query("SELECT mac_address, ip_address, vendor, is_dangerous FROM device ORDER BY is_dangerous DESC, mac_address")
         if err != nil {
             fmt.Fprintf(w, "<div class='device-card'><div class='device-info'><h3>❌ エラー</h3><div class='device-details'>%s</div></div></div>", err.Error())
         } else {
@@ -220,25 +254,27 @@ func main() {
             deviceCount := 0
             for rows.Next() {
                 var macAddress, ipAddress, vendor string
-                rows.Scan(&macAddress, &ipAddress, &vendor)
+                var isDangerous bool
+                rows.Scan(&macAddress, &ipAddress, &vendor, &isDangerous)
                 deviceCount++
                 
-                // ステータス判定（仮の実装）
+                // ステータス判定
                 statusText := "安全"
                 statusClass := "status-safe"
                 
-                // vendorが空の場合は新規として扱う
-                if vendor == "" {
-                    statusText = "新規"
-                    statusClass = "status-warning"
-                }
-                if vendor == "Unknown" {
+                if isDangerous {
                     statusText = "危険"
                     statusClass = "status-danger"
                 }
                 
+                // ベンダー情報の表示調整
+                vendorDisplay := vendor
+                if vendor == "" {
+                    vendorDisplay = "不明"
+                }
+                
                 fmt.Fprintln(w, `<div class='device-card'>`)
-                fmt.Fprintf(w, `<div class='device-info'><h3>🖥️ 機器 #%d</h3><div class='device-details'>IP: %s<br>MAC: %s<br>ベンダー: %s</div></div>`, deviceCount, ipAddress, macAddress, vendor)
+                fmt.Fprintf(w, `<div class='device-info'><h3>🖥️ 機器 #%d</h3><div class='device-details'>IP: %s<br>MAC: %s<br>ベンダー: %s</div></div>`, deviceCount, ipAddress, macAddress, vendorDisplay)
                 fmt.Fprintf(w, `<div class='device-status %s'>%s</div>`, statusClass, statusText)
                 fmt.Fprintln(w, `</div>`)
             }
