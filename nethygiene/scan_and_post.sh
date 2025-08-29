@@ -15,6 +15,7 @@ mkdir -p "$LOG_DIR"
 SUCCESS_LOG="${LOG_DIR}/success.log"
 ERROR_LOG="${LOG_DIR}/error.log"
 TIMESTAMP() { date '+%Y-%m-%d %H:%M:%S%z'; }
+HOST="${NET_HOST}/upload"
 
 # ---- JSON エスケープ関数（最低限の \ と " を処理）----
 json_escape() {
@@ -76,13 +77,13 @@ HTTP_CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${NET_TOKEN}" \
   -d "$JSON_PAYLOAD" \
-  "$NET_HOST")
+  "$HOST")
 
 # ---- 成否判定・ログ ----
 if [[ "$HTTP_CODE" =~ ^2[0-9]{2}$ ]]; then
-  echo "$(TIMESTAMP) Sent ${#LINES[@]} device(s) to ${NET_HOST} [HTTP ${HTTP_CODE}]" | tee -a "$SUCCESS_LOG" >/dev/null
+  echo "$(TIMESTAMP) Sent ${#LINES[@]} device(s) to ${HOST} [HTTP ${HTTP_CODE}]" | tee -a "$SUCCESS_LOG" >/dev/null
   exit 0
 else
-  echo "$(TIMESTAMP) Failed to send to ${NET_HOST} [HTTP ${HTTP_CODE}] Payload=${JSON_PAYLOAD}" | tee -a "$ERROR_LOG" >/dev/null
+  echo "$(TIMESTAMP) Failed to send to ${HOST} [HTTP ${HTTP_CODE}] Payload=${JSON_PAYLOAD}" | tee -a "$ERROR_LOG" >/dev/null
   exit 1
 fi
