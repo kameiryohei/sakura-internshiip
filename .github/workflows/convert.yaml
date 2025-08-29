@@ -7,6 +7,8 @@ on:
 jobs:
   build-pdf:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # ← この行を追加
 
     steps:
       - name: Checkout repository
