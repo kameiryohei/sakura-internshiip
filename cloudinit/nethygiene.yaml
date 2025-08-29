@@ -121,7 +121,4 @@ runcmd:
   - [localectl, set-keymap, jp]
   - [localectl, set-x11-keymap, jp]
   - systemctl restart cron
-reboot:
-  - delay: 10
-  - timeout: 600
-  - condition: "true"
+  - reboot
